@@ -2,6 +2,7 @@ package dev.nstv.sheepit.gestures.util
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
@@ -15,6 +16,7 @@ data class ScreenSize(
     val heightPx: Int
 ) {
     val middlePoint: DpOffset = DpOffset(width / 2, height / 2)
+    val middlePointPx: Offset = Offset(widthPx / 2f, heightPx / 2f)
 }
 
 @Composable

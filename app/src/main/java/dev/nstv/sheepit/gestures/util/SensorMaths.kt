@@ -11,6 +11,7 @@ const val SensorMagnitude = 500f
 const val AccelerationThreshold = 1f
 const val DegreesThreshold = 3f
 const val RotationDegreesThreshold = 10f
+const val DefaultDelay = 100L
 
 // PI
 const val Pi = PI.toFloat()
@@ -68,4 +69,6 @@ fun mapTranslationHeight(
     toEnd = screenSize.heightPx / 2f,
 )
 
+fun Offset.height() = y
+fun Offset.width() = x
 

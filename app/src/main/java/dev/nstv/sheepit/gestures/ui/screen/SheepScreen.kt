@@ -1,13 +1,10 @@
 package dev.nstv.sheepit.gestures.ui.screen
 
-import android.hardware.Sensor
+import androidx.compose.animation.Animatable
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.VectorConverter
-import androidx.compose.animation.core.calculateTargetValue
 import androidx.compose.animation.rememberSplineBasedDecay
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.draggable2D
 import androidx.compose.foundation.gestures.rememberDraggable2DState
 import androidx.compose.foundation.layout.Box
@@ -23,24 +20,24 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.PointerEventType
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import dev.nstv.composablesheep.library.ComposableSheep
 import dev.nstv.composablesheep.library.model.Sheep
 import dev.nstv.sheepit.gestures.sensormanager.AndroidSensorManager
+import dev.nstv.sheepit.gestures.sensormanager.modifiers.danceFling
+import dev.nstv.sheepit.gestures.sensormanager.modifiers.danceTaps
 import dev.nstv.sheepit.gestures.sensormanager.rememberSensorManager
-import dev.nstv.sheepit.gestures.util.AccelerationThreshold
+import dev.nstv.sheepit.gestures.util.DefaultDelay
 import dev.nstv.sheepit.gestures.util.ScreenSize
-import dev.nstv.sheepit.gestures.util.SensorMagnitude
+import dev.nstv.sheepit.gestures.util.defaultDanceAnimationSpec
 import dev.nstv.sheepit.gestures.util.rememberScreenSize
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlin.math.abs
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun AnimatedSensorsScreen(
+fun SheepScreen(
     sheep: Sheep,
     modifier: Modifier = Modifier,
     screenSize: ScreenSize = rememberScreenSize(),
@@ -50,12 +47,14 @@ fun AnimatedSensorsScreen(
     val coroutineScope = rememberCoroutineScope()
 
     // Sheep Properties
-    val sheepScale = remember { Animatable(1f) }
-    val sheepRotation = remember { Animatable(Offset(0f, 0f), Offset.VectorConverter) }
-    val sheepTranslation = remember { Animatable(Offset(0f, 0f), Offset.VectorConverter) }
-    sheepTranslation.updateBounds(
-        lowerBound = Offset(-screenSize.widthPx / 2f, -screenSize.heightPx / 2f),
-        upperBound = Offset(screenSize.widthPx / 2f, screenSize.heightPx / 2f),
+    val color = remember { Animatable(sheep.fluffColor) }
+    val scale = remember { Animatable(1f) }
+    val rotation = remember { Animatable(Offset(0f, 0f), Offset.VectorConverter) }
+    val rotationZ = remember { Animatable(0f) }
+    val translation = remember { Animatable(Offset(0f, 0f), Offset.VectorConverter) }
+    translation.updateBounds(
+        lowerBound = Offset(-screenSize.middlePointPx.x, -screenSize.middlePointPx.y),
+        upperBound = Offset(screenSize.middlePointPx.x, screenSize.middlePointPx.y),
     )
 
     // Gesture states
@@ -63,12 +62,12 @@ fun AnimatedSensorsScreen(
     var isDragging by remember { mutableStateOf(false) }
     val draggableState = rememberDraggable2DState { delta ->
         coroutineScope.launch {
-            sheepTranslation.snapTo(sheepTranslation.value.plus(delta))
+            translation.snapTo(translation.value.plus(delta))
         }
     }
 
     LifecycleResumeEffect(sensorManager) {
-        // Gyroscope
+        /*/ Gyroscope
         sensorManager.registerListener(Sensor.TYPE_GYROSCOPE) { sensorEvent ->
 
             val xValue = sensorEvent.values[0]
@@ -83,11 +82,11 @@ fun AnimatedSensorsScreen(
 
                 val decayOffset = decay.calculateTargetValue(
                     typeConverter = Offset.VectorConverter,
-                    initialValue = sheepTranslation.value,
+                    initialValue = translation.value,
                     initialVelocity = velocity,
                 )
                 coroutineScope.launch {
-                    sheepTranslation.animateTo(decayOffset, initialVelocity = velocity)
+                    translation.animateTo(decayOffset, initialVelocity = velocity)
                 }
             }
         }
@@ -162,42 +161,68 @@ fun AnimatedSensorsScreen(
         }
     }
 
+    fun doTapMove() {
+        coroutineScope.launch {
+            rotationZ.animateTo(-45f, defaultDanceAnimationSpec())
+            delay(DefaultDelay)
+            rotationZ.animateTo(0f, defaultDanceAnimationSpec())
+            delay(DefaultDelay)
+            rotationZ.animateTo(45f, defaultDanceAnimationSpec())
+            delay(DefaultDelay)
+            rotationZ.animateTo(0f, defaultDanceAnimationSpec())
+        }
+    }
+
     Box(modifier = modifier.fillMaxSize()) {
         ComposableSheep(
             sheep = sheep,
+            fluffColor = color.value,
             modifier = Modifier
                 .size(300.dp)
                 .align(Alignment.Center)
+                .graphicsLayer {
+                    translationX = translation.value.x
+                    translationY = translation.value.y
+                    rotationX = rotation.value.x
+                    rotationY = rotation.value.y
+                    this.rotationZ = rotationZ.value
+                    scaleX = scale.value
+                    scaleY = scale.value
+                }
 //                .animateOrientationChange(
 //                    adjusted = true,
 //                )
-                .graphicsLayer {
-                    translationX = sheepTranslation.value.x
-                    translationY = sheepTranslation.value.y
-                    rotationX = sheepRotation.value.x
-                    rotationY = sheepRotation.value.y
-                    scaleX = sheepScale.value
-                    scaleY = sheepScale.value
-                }
-                .pointerInput(PointerEventType.Press) {
-                    awaitEachGesture {
-                        awaitFirstDown()
-                        coroutineScope.launch {
-                            sheepScale.animateTo(1.2f)
-                        }
-                    }
-                }
-                .draggable2D(
-                    state = draggableState,
-                    onDragStarted = {
-                        isDragging = true
-                    },
-                    onDragStopped = {
-                        sheepScale.animateTo(1f)
-                        isDragging = false
-                    }
-                )
+//                .pointerInput(PointerEventType.Press) {
+//                    detectTapGestures(
+//                        onPress = {
+//                            scale.animateTo(1.2f)
+//                            awaitRelease()
+//                            scale.animateTo(1f)
+//                        },
+//                        onTap = {
+//                            coroutineScope.launch {
+//                                color.animateTo(SheepColor.random(color.value))
+//                            }
+//                        },
+//                        onDoubleTap = {
+//                            doTapMove()
+//                        },
+//                    )
+//                }
+                .danceTaps()
+                .danceFling()
+//                .draggable2D(
+//                    state = draggableState,
+//                    onDragStarted = {
+//                        isDragging = true
+//                    },
+//                    onDragStopped = {
+//                        scale.animateTo(1f)
+//                        isDragging = false
+//                    }
+//                )
         )
     }
 }
+
 
