@@ -6,7 +6,6 @@ import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.calculateTargetValue
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.keyframes
-import androidx.compose.animation.core.repeatable
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.rememberSplineBasedDecay
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -19,7 +18,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.GraphicsLayerScope
-import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Measurable
 import androidx.compose.ui.layout.MeasureResult
@@ -41,6 +39,7 @@ fun Modifier.danceTaps(): Modifier {
     val scale = remember { Animatable(1f) }
     val rotationZ = remember { Animatable(0f) }
     var goLeft = true
+    var isSpinning = false
 
     fun doTapMove() {
         coroutineScope.launch {
@@ -64,6 +63,7 @@ fun Modifier.danceTaps(): Modifier {
     }
 
     fun doLongPress() {
+        isSpinning = true
         coroutineScope.launch {
             rotationZ.animateTo(
                 360f,
@@ -89,7 +89,10 @@ fun Modifier.danceTaps(): Modifier {
                 scale.animateTo(1.1f)
                 awaitRelease()
                 scale.animateTo(1f)
-                rotationZ.animateTo(0f)
+                if (isSpinning) {
+                    rotationZ.animateTo(0f)
+                    isSpinning = false
+                }
             },
             onTap = {
                 doTapMove()
@@ -163,7 +166,7 @@ fun Modifier.danceFling(): Modifier {
 
 // GraphicLayer handler
 
-private data class DanceMoveElement(
+internal data class DanceMoveElement(
     val block: GraphicsLayerScope.() -> Unit
 ) : ModifierNodeElement<DanceMoveModifier>() {
     override fun create() = DanceMoveModifier(block)
@@ -173,17 +176,15 @@ private data class DanceMoveElement(
     }
 }
 
-private class DanceMoveModifier(
+internal class DanceMoveModifier(
     var layerBlock: GraphicsLayerScope.() -> Unit,
 ) : DelegatingNode() {
     init {
-        delegate(
-            DanceGraphicsModifier(layerBlock = layerBlock)
-        )
+        delegate(DanceGraphicsModifier(layerBlock = layerBlock))
     }
 }
 
-private class DanceGraphicsModifier(
+internal class DanceGraphicsModifier(
     var layerBlock: GraphicsLayerScope.() -> Unit,
 ) : Modifier.Node(), LayoutModifierNode, DelegatableNode {
     override fun MeasureScope.measure(

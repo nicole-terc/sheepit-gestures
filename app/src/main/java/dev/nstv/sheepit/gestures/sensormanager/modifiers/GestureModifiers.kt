@@ -65,12 +65,12 @@ fun Modifier.animateOrientationChange(
                 translation.animateTo(Offset(x = offsetX, y = -offsetY))
             }
             onOrientationChanged?.invoke(DeviceOrientation(values))
-        }.graphicsLayer {
+        }.then(DanceMoveElement {
             translationX = translation.value.x
             translationY = translation.value.y
             rotationX = rotation.value.x
             rotationY = rotation.value.y
-        }
+        })
     } else Modifier
 
     return this then sensorModifier

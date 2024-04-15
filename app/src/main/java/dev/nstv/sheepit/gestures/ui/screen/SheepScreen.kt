@@ -25,6 +25,7 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import dev.nstv.composablesheep.library.ComposableSheep
 import dev.nstv.composablesheep.library.model.Sheep
 import dev.nstv.sheepit.gestures.sensormanager.AndroidSensorManager
+import dev.nstv.sheepit.gestures.sensormanager.modifiers.animateOrientationChange
 import dev.nstv.sheepit.gestures.sensormanager.modifiers.danceFling
 import dev.nstv.sheepit.gestures.sensormanager.modifiers.danceTaps
 import dev.nstv.sheepit.gestures.sensormanager.rememberSensorManager
@@ -189,8 +190,15 @@ fun SheepScreen(
                     scaleX = scale.value
                     scaleY = scale.value
                 }
-//                .animateOrientationChange(
-//                    adjusted = true,
+//                .draggable2D(
+//                    state = draggableState,
+//                    onDragStarted = {
+//                        isDragging = true
+//                    },
+//                    onDragStopped = {
+//                        scale.animateTo(1f)
+//                        isDragging = false
+//                    }
 //                )
 //                .pointerInput(PointerEventType.Press) {
 //                    detectTapGestures(
@@ -209,18 +217,9 @@ fun SheepScreen(
 //                        },
 //                    )
 //                }
-                .danceTaps()
+                .animateOrientationChange(adjusted = true)
                 .danceFling()
-//                .draggable2D(
-//                    state = draggableState,
-//                    onDragStarted = {
-//                        isDragging = true
-//                    },
-//                    onDragStopped = {
-//                        scale.animateTo(1f)
-//                        isDragging = false
-//                    }
-//                )
+                .danceTaps()
         )
     }
 }
