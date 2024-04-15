@@ -11,6 +11,7 @@ import androidx.compose.ui.platform.LocalContext
 import dev.nstv.sheepit.gestures.util.HalfPi
 import dev.nstv.sheepit.gestures.util.Pi
 import dev.nstv.sheepit.gestures.util.TwoPi
+import kotlin.math.sqrt
 
 
 typealias SensorType = Int
@@ -18,6 +19,8 @@ typealias SensorType = Int
 const val ShowSensorLog = false
 const val CUSTOM_ORIENTATION = -10
 const val CUSTOM_ORIENTATION_CORRECTED = -11
+const val CUSTOM_GESTURE_SHAKE = -12
+const val CUSTOM_GESTURE_TWIST = -13
 
 class AndroidSensorManager(
     private val context: Context
@@ -31,6 +34,11 @@ class AndroidSensorManager(
     var magnetometerReading: FloatArray? = null
     var lastRotationReading: FloatArray = FloatArray(9)
     var lastRotationSet = false
+
+    // Shake Gesture
+    var lastAcceleration: Float = SensorManager.GRAVITY_EARTH
+    var isShaking: Boolean = false
+    var lastShakeTime: Long = 0
 
     fun getSensorList(sensorType: SensorType): List<Sensor> {
         return sensorManager.getSensorList(sensorType)
@@ -86,6 +94,9 @@ class AndroidSensorManager(
         magnetometerReading = null
         lastRotationReading = FloatArray(9)
         lastRotationSet = false
+        lastAcceleration = SensorManager.GRAVITY_EARTH
+        isShaking = false
+        lastShakeTime = 0
     }
 
     fun observeOrientationChanges(
@@ -185,6 +196,49 @@ class AndroidSensorManager(
         }
 
         listeners[CUSTOM_ORIENTATION_CORRECTED] = sensorEventListener
+    }
+
+    // Function to detect shake gestures using the accelerometer sensor
+    fun observeShakeGestures(
+        shakeSensitivity: Float = 12f,
+        shakeStopDelay: Long = 500,
+        onShakeStarted: () -> Unit,
+        onShakeStopped: () -> Unit
+    ) {
+        val sensorEventListener = object : SensorEventListener {
+            override fun onSensorChanged(event: SensorEvent) {
+                val x = event.values[0]
+                val y = event.values[1]
+                val z = event.values[2]
+
+                // 3D vector length (Euclidean norm aka n-Pythagoras)
+                val currentAcceleration = sqrt(x * x + y * y + z * z)
+                val delta: Float = currentAcceleration - lastAcceleration
+                val acceleration = currentAcceleration * 0.9f + delta
+                if (acceleration > shakeSensitivity) {
+                    lastShakeTime = System.currentTimeMillis()
+                    isShaking = true
+                    onShakeStarted()
+                } else if (isShaking && System.currentTimeMillis() - lastShakeTime > shakeStopDelay) {
+                    isShaking = false
+                    onShakeStopped()
+                }
+                lastAcceleration = currentAcceleration
+            }
+
+            override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
+                // Do nothing
+            }
+        }
+        sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)?.let {
+            sensorManager.registerListener(
+                sensorEventListener,
+                it,
+                SensorManager.SENSOR_DELAY_NORMAL
+            )
+        }
+
+        listeners[CUSTOM_GESTURE_SHAKE] = sensorEventListener
     }
 }
 

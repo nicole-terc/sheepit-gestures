@@ -27,6 +27,7 @@ import dev.nstv.sheepit.gestures.sensormanager.AndroidSensorManager
 import dev.nstv.sheepit.gestures.sensormanager.modifiers.danceOrientationChange
 import dev.nstv.sheepit.gestures.sensormanager.modifiers.danceFling
 import dev.nstv.sheepit.gestures.sensormanager.modifiers.danceResize
+import dev.nstv.sheepit.gestures.sensormanager.modifiers.danceShakeModifier
 import dev.nstv.sheepit.gestures.sensormanager.modifiers.danceTaps
 import dev.nstv.sheepit.gestures.sensormanager.rememberSensorManager
 import dev.nstv.sheepit.gestures.util.DefaultDelay
@@ -217,10 +218,11 @@ fun SheepScreen(
 //                        },
 //                    )
 //                }
-                .danceOrientationChange(adjusted = true)
-                .danceFling()
-                .danceTaps()
-                .danceResize()
+//                .danceOrientationChange(adjusted = true)
+                .danceShakeModifier()
+//                .danceFling()
+//                .danceTaps()
+//                .danceResize()
         )
     }
 }
