@@ -1,11 +1,9 @@
 package dev.nstv.sheepit.gestures.sensormanager.modifiers
 
 import android.hardware.Sensor.TYPE_ACCELEROMETER
-import android.hardware.Sensor.TYPE_LINEAR_ACCELERATION
 import android.hardware.SensorManager
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.VectorConverter
-import androidx.compose.animation.core.keyframes
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -18,12 +16,13 @@ import dev.nstv.sheepit.gestures.sensormanager.DeviceOrientation
 import dev.nstv.sheepit.gestures.sensormanager.rememberSensorManager
 import dev.nstv.sheepit.gestures.util.HalfPi
 import dev.nstv.sheepit.gestures.util.ScreenSize
+import dev.nstv.sheepit.gestures.util.backAndForthKeyframes
 import dev.nstv.sheepit.gestures.util.mapRotation
 import dev.nstv.sheepit.gestures.util.mapTranslationHeight
 import dev.nstv.sheepit.gestures.util.mapTranslationWidth
 import dev.nstv.sheepit.gestures.util.rememberScreenSize
+import dev.nstv.sheepit.gestures.util.sideToSideKeyframes
 import kotlinx.coroutines.launch
-import kotlin.math.abs
 import kotlin.math.sqrt
 
 
@@ -90,23 +89,21 @@ fun Modifier.danceShakeModifier(
     enabled: Boolean = true,
     danceEnabled: Boolean = true,
     shakeSensitivity: Float = 12f,
-    shakeStopDelay: Long = 200,
+    shakeStopDelay: Long = 100,
     onShakeStarted: () -> Unit = {},
     onShakeStopped: () -> Unit = {},
 ): Modifier {
     val coroutineScope = rememberCoroutineScope()
     val sensorManager: AndroidSensorManager = rememberSensorManager()
     val screenSize: ScreenSize = rememberScreenSize()
-    val moveDelta = screenSize.widthPx * 0.25f
+    val moveDelta = screenSize.widthPx * 0.33f
 
     val scale = remember { Animatable(1f) }
-    val rotationX = remember { Animatable(0f) }
-    val rotationY = remember { Animatable(0f) }
     val translationX = remember { Animatable(0f) }
-    val translationY = remember { Animatable(0f) }
+    val rotationY = remember { Animatable(0f) }
 
-    var lastAccelerationValues = floatArrayOf(0f, 0f, 0f)
     var lastAcceleration: Float = SensorManager.GRAVITY_EARTH
+    var acceleration: Float = 0f
     var isShaking = false
     var lastShakeTime: Long = 0
 
@@ -114,90 +111,34 @@ fun Modifier.danceShakeModifier(
         // No op
     }
 
-    fun doShakeStoppedMove(
-        xDiff: Float,
-        yDiff: Float,
-        zDiff: Float,
-    ) {
-        if (zDiff > xDiff && zDiff > yDiff) {
-            coroutineScope.launch {
-                scale.animateTo(
-                    1f,
-                    keyframes {
-                        durationMillis = 500
-                        1f atFraction 0.0f
-                        0.5f atFraction 0.25f
-                        1f atFraction 0.5f
-                        1.5f atFraction 0.75f
-                        1f atFraction 1.0f
-                    }
-                )
-            }
-            coroutineScope.launch {
-                translationY.animateTo(
-                    targetValue = 0f,
-                    animationSpec = keyframes {
-                        durationMillis = 500
-                        0f atFraction 0.0f
-                        moveDelta / 2 atFraction 0.25f
-                        0f atFraction 0.5f
-                        -moveDelta / 2 atFraction 0.75f
-                        0f atFraction 1.0f
-                    }
-                )
-            }
-        } else {
-            val translation = if (xDiff > yDiff) translationX else translationY
-            // Translation
-            coroutineScope.launch {
-                translation.animateTo(
-                    targetValue = 0f,
-                    animationSpec = keyframes {
-                        durationMillis = 500
-                        0f atFraction 0.0f
-                        moveDelta atFraction 0.25f
-                        0f atFraction 0.5f
-                        -moveDelta atFraction 0.75f
-                        0f atFraction 1.0f
-                    }
-                )
-            }
-            //Scale
-            coroutineScope.launch {
-                scale.animateTo(
-                    1f,
-                    keyframes {
-                        durationMillis = 500
-                        1f atFraction 0.0f
-                        0.5f atFraction 0.25f
-                        1f atFraction 0.5f
-                        0.5f atFraction 0.75f
-                        1f atFraction 1.0f
-                    }
-                )
-            }
-//            // Rotation
-//            coroutineScope.launch {
-//                rotation.animateTo(
-//                    targetValue = 0f,
-//                    animationSpec = keyframes {
-//                        durationMillis = 500
-//                        0f atFraction 0.0f
-//                        90f atFraction 0.25f
-//                        0f atFraction 0.5f
-//                        -90f atFraction 0.75f
-//                        0f atFraction 1.0f
-//                    }
-//                )
-//            }
+    fun doShakeStoppedMove() {
+        // Translation
+        coroutineScope.launch {
+            translationX.animateTo(
+                targetValue = 0f,
+                animationSpec = sideToSideKeyframes(0f, moveDelta)
+            )
+        }
+        //Scale
+        coroutineScope.launch {
+            scale.animateTo(
+                targetValue = 1f,
+                animationSpec = backAndForthKeyframes(1f, 0.5f)
+            )
+        }
+
+        // Rotation
+        coroutineScope.launch {
+            rotationY.animateTo(
+                targetValue = 0f,
+                animationSpec = sideToSideKeyframes(0f, 90f)
+            )
         }
     }
 
     val sensorModifier = if (enabled) {
         DanceMoveElement {
             this.translationX = translationX.value
-            this.translationY = translationY.value
-            this.rotationX = rotationX.value
             this.rotationY = rotationY.value
             this.scaleX = scale.value
             this.scaleY = scale.value
@@ -209,10 +150,10 @@ fun Modifier.danceShakeModifier(
             val y = values[1]
             val z = values[2]
 
-            // 3D vector length (Euclidean norm aka n-Pythagoras)
+            // source: https://stackoverflow.com/questions/2317428/how-to-refresh-app-upon-shaking-the-device
             val currentAcceleration = sqrt(x * x + y * y + z * z)
             val delta: Float = currentAcceleration - lastAcceleration
-            val acceleration = currentAcceleration * 0.9f + delta
+            acceleration = acceleration * 0.9f + delta
             if (acceleration > shakeSensitivity) {
                 lastShakeTime = System.currentTimeMillis()
                 isShaking = true
@@ -224,15 +165,10 @@ fun Modifier.danceShakeModifier(
                 isShaking = false
                 onShakeStopped()
                 if (danceEnabled) {
-                    doShakeStoppedMove(
-                        xDiff = x - lastAccelerationValues[0],
-                        yDiff = y - lastAccelerationValues[1],
-                        zDiff = z - lastAccelerationValues[2],
-                    )
+                    doShakeStoppedMove()
                 }
             }
             lastAcceleration = currentAcceleration
-            lastAccelerationValues = floatArrayOf(x, y, z)
         }
     } else {
         Modifier

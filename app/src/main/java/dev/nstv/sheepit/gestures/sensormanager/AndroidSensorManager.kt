@@ -36,6 +36,7 @@ class AndroidSensorManager(
     var lastRotationSet = false
 
     // Shake Gesture
+    var acceleration: Float = 0f
     var lastAcceleration: Float = SensorManager.GRAVITY_EARTH
     var isShaking: Boolean = false
     var lastShakeTime: Long = 0
@@ -201,7 +202,7 @@ class AndroidSensorManager(
     // Function to detect shake gestures using the accelerometer sensor
     fun observeShakeGestures(
         shakeSensitivity: Float = 12f,
-        shakeStopDelay: Long = 500,
+        shakeStopDelay: Long = 300,
         onShakeStarted: () -> Unit,
         onShakeStopped: () -> Unit
     ) {
@@ -211,10 +212,10 @@ class AndroidSensorManager(
                 val y = event.values[1]
                 val z = event.values[2]
 
-                // 3D vector length (Euclidean norm aka n-Pythagoras)
+                // source: https://stackoverflow.com/questions/2317428/how-to-refresh-app-upon-shaking-the-device
                 val currentAcceleration = sqrt(x * x + y * y + z * z)
                 val delta: Float = currentAcceleration - lastAcceleration
-                val acceleration = currentAcceleration * 0.9f + delta
+                acceleration = acceleration * 0.9f + delta
                 if (acceleration > shakeSensitivity) {
                     lastShakeTime = System.currentTimeMillis()
                     isShaking = true
