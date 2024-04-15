@@ -7,7 +7,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.graphicsLayer
 import dev.nstv.sheepit.gestures.sensormanager.AndroidSensorManager
 import dev.nstv.sheepit.gestures.sensormanager.CUSTOM_ORIENTATION
 import dev.nstv.sheepit.gestures.sensormanager.CUSTOM_ORIENTATION_CORRECTED
@@ -22,14 +21,11 @@ import dev.nstv.sheepit.gestures.util.rememberScreenSize
 import kotlinx.coroutines.launch
 
 
-// ----------------------
-// Tap modifier
-
-
-// ----------------------
-// Animated Orientation Change
+/**
+ * Dance Orientation Change Modifier
+ */
 @Composable
-fun Modifier.animateOrientationChange(
+fun Modifier.danceOrientationChange(
     enabled: Boolean = true,
     adjusted: Boolean = false,
     onOrientationChanged: ((DeviceOrientation) -> Unit)? = null,

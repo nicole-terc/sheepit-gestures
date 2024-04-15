@@ -1,5 +1,6 @@
 package dev.nstv.sheepit.gestures.sensormanager.modifiers
 
+import android.util.Log
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.VectorConverter
@@ -9,12 +10,20 @@ import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.rememberSplineBasedDecay
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.calculateCentroidSize
+import androidx.compose.foundation.gestures.calculateRotation
+import androidx.compose.foundation.gestures.calculateZoom
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.draggable2D
 import androidx.compose.foundation.gestures.rememberDraggable2DState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.GraphicsLayerScope
@@ -27,11 +36,18 @@ import androidx.compose.ui.node.DelegatingNode
 import androidx.compose.ui.node.LayoutModifierNode
 import androidx.compose.ui.node.ModifierNodeElement
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.util.fastAny
 import dev.nstv.sheepit.gestures.util.DefaultDelay
 import dev.nstv.sheepit.gestures.util.defaultDanceAnimationSpec
 import dev.nstv.sheepit.gestures.util.rememberScreenSize
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.math.PI
+import kotlin.math.abs
+
+/**
+ * Dance Taps Modifier
+ */
 
 @Composable
 fun Modifier.danceTaps(): Modifier {
@@ -107,6 +123,10 @@ fun Modifier.danceTaps(): Modifier {
     }
 }
 
+/**
+ * Dance Fling Modifier
+ */
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun Modifier.danceFling(): Modifier {
@@ -164,14 +184,89 @@ fun Modifier.danceFling(): Modifier {
     )
 }
 
-// GraphicLayer handler
+/**
+ * Dance Resize Modifier
+ */
+@Composable
+fun Modifier.danceResize(): Modifier {
+    var scale by remember { mutableFloatStateOf(1f) }
+    var rotationZ by remember { mutableFloatStateOf(0f) }
+
+
+    return this then DanceMoveElement {
+        this.rotationZ = rotationZ
+        this.scaleX = scale
+        this.scaleY = scale
+    }.pointerInput(Unit) {
+        //  Blocks dragging as it consumes all events
+//        detectTransformGestures { centroid, pan, zoom, rotation ->
+//            scale *= zoom
+//            rotationZ *= rotation
+//        }
+        // copy & pasted from detectTransformGestures + modifications
+        awaitEachGesture {
+            val panZoomLock = false
+            var rotation = 0f
+            var zoom = 1f
+            var pastTouchSlop = false
+            val touchSlop = viewConfiguration.touchSlop
+            var lockedToPanZoom = false
+
+            awaitFirstDown(requireUnconsumed = false)
+            do {
+                val event = awaitPointerEvent()
+                val canceled = event.changes.fastAny { it.isConsumed }
+                if (!canceled) {
+                    val zoomChange = event.calculateZoom()
+                    val rotationChange = event.calculateRotation()
+
+                    if (!pastTouchSlop) {
+                        zoom *= zoomChange
+                        rotation += rotationChange
+
+                        val centroidSize = event.calculateCentroidSize(useCurrent = false)
+                        val zoomMotion = abs(1 - zoom) * centroidSize
+                        val rotationMotion = abs(rotation * PI.toFloat() * centroidSize / 180f)
+
+                        if (zoomMotion > touchSlop ||
+                            rotationMotion > touchSlop
+                        ) {
+                            pastTouchSlop = true
+                            lockedToPanZoom = panZoomLock && rotationMotion < touchSlop
+                        }
+                    }
+
+                    if (pastTouchSlop) {
+                        val effectiveRotation = if (lockedToPanZoom) 0f else rotationChange
+                        if (effectiveRotation != 0f ||
+                            zoomChange != 1f
+                        ) {
+                            //Gesture
+                            scale *= zoomChange
+                            rotationZ += rotationChange
+
+                        }
+                    }
+                }
+            } while (!canceled && event.changes.fastAny { it.pressed })
+        }
+    }
+}
+
+/**
+ * Shared Graphics Element
+ */
 
 internal data class DanceMoveElement(
     val block: GraphicsLayerScope.() -> Unit
 ) : ModifierNodeElement<DanceMoveModifier>() {
-    override fun create() = DanceMoveModifier(block)
+    override fun create(): DanceMoveModifier {
+        Log.d("HERE", "create NODE")
+        return DanceMoveModifier(block)
+    }
 
     override fun update(node: DanceMoveModifier) {
+        Log.d("HERE", "update NODE")
         node.layerBlock = block
     }
 }

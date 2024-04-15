@@ -5,7 +5,6 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.rememberSplineBasedDecay
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.gestures.draggable2D
 import androidx.compose.foundation.gestures.rememberDraggable2DState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -25,8 +24,9 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import dev.nstv.composablesheep.library.ComposableSheep
 import dev.nstv.composablesheep.library.model.Sheep
 import dev.nstv.sheepit.gestures.sensormanager.AndroidSensorManager
-import dev.nstv.sheepit.gestures.sensormanager.modifiers.animateOrientationChange
+import dev.nstv.sheepit.gestures.sensormanager.modifiers.danceOrientationChange
 import dev.nstv.sheepit.gestures.sensormanager.modifiers.danceFling
+import dev.nstv.sheepit.gestures.sensormanager.modifiers.danceResize
 import dev.nstv.sheepit.gestures.sensormanager.modifiers.danceTaps
 import dev.nstv.sheepit.gestures.sensormanager.rememberSensorManager
 import dev.nstv.sheepit.gestures.util.DefaultDelay
@@ -217,9 +217,10 @@ fun SheepScreen(
 //                        },
 //                    )
 //                }
-                .animateOrientationChange(adjusted = true)
+                .danceOrientationChange(adjusted = true)
                 .danceFling()
                 .danceTaps()
+                .danceResize()
         )
     }
 }

@@ -15,7 +15,7 @@ import dev.nstv.sheepit.gestures.util.TwoPi
 
 typealias SensorType = Int
 
-const val ShowSensorLog = true
+const val ShowSensorLog = false
 const val CUSTOM_ORIENTATION = -10
 const val CUSTOM_ORIENTATION_CORRECTED = -11
 

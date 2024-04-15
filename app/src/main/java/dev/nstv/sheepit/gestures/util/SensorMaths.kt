@@ -4,7 +4,9 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.IntOffset
 import dev.nstv.composablesheep.library.util.toRadians
 import kotlin.math.PI
+import kotlin.math.cos
 import kotlin.math.roundToInt
+import kotlin.math.sin
 
 // Constants
 const val SensorMagnitude = 500f
@@ -71,4 +73,12 @@ fun mapTranslationHeight(
 
 fun Offset.height() = y
 fun Offset.width() = x
+
+fun Offset.rotateBy(angle: Float): Offset {
+    val angleInRadians = angle * PI / 180
+    return Offset(
+        (x * cos(angleInRadians) - y * sin(angleInRadians)).toFloat(),
+        (x * sin(angleInRadians) + y * cos(angleInRadians)).toFloat()
+    )
+}
 

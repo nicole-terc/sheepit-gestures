@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.dp
 import dev.nstv.composablesheep.library.ComposableSheep
 import dev.nstv.composablesheep.library.model.Sheep
 import dev.nstv.sheepit.gestures.sensormanager.AndroidSensorManager
-import dev.nstv.sheepit.gestures.sensormanager.modifiers.animateOrientationChange
+import dev.nstv.sheepit.gestures.sensormanager.modifiers.danceOrientationChange
 import dev.nstv.sheepit.gestures.sensormanager.modifiers.danceTaps
 import dev.nstv.sheepit.gestures.sensormanager.rememberSensorManager
 import dev.nstv.sheepit.gestures.util.ScreenSize
@@ -78,7 +78,7 @@ fun SheepModifiersScreen(
                     scaleX = scale.value
                     scaleY = scale.value
                 }
-                .animateOrientationChange(adjusted = true)
+                .danceOrientationChange(adjusted = true)
                 .danceTaps()
                 .draggable2D(
                     state = draggableState,
