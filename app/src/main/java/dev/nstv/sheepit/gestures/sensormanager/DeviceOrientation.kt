@@ -4,9 +4,9 @@ import dev.nstv.sheepit.gestures.util.toDegrees
 
 // documentation: https://developer.android.com/develop/sensors-and-location/sensors/sensors_position#sensors-pos-orient
 data class DeviceOrientation(
-    val azimuth: Float, // Orientation[0] 0 to 360
-    val pitch: Float, // Orientation[1] -90 to 90
-    val roll: Float, // Orientation[2] -180 to 180
+    val azimuth: Float, // Orientation[0] | -z axis | 0 to 360
+    val pitch: Float, // Orientation[1] | x axis | -90 to 90
+    val roll: Float, // Orientation[2] | y axis | -180 to 180
 ) {
     constructor(orientation: FloatArray) : this(
         azimuth = orientation[0], pitch = orientation[1], roll = orientation[2]

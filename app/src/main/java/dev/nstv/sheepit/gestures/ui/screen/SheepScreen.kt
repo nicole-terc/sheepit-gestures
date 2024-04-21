@@ -26,9 +26,11 @@ import dev.nstv.composablesheep.library.model.Sheep
 import dev.nstv.sheepit.gestures.sensormanager.AndroidSensorManager
 import dev.nstv.sheepit.gestures.sensormanager.modifiers.danceOrientationChange
 import dev.nstv.sheepit.gestures.sensormanager.modifiers.danceFling
+import dev.nstv.sheepit.gestures.sensormanager.modifiers.danceParallax
 import dev.nstv.sheepit.gestures.sensormanager.modifiers.danceResize
 import dev.nstv.sheepit.gestures.sensormanager.modifiers.danceShakeModifier
 import dev.nstv.sheepit.gestures.sensormanager.modifiers.danceTaps
+import dev.nstv.sheepit.gestures.sensormanager.modifiers.onXShakeModifier
 import dev.nstv.sheepit.gestures.sensormanager.rememberSensorManager
 import dev.nstv.sheepit.gestures.util.DefaultDelay
 import dev.nstv.sheepit.gestures.util.ScreenSize
@@ -220,6 +222,7 @@ fun SheepScreen(
 //                }
 //                .danceOrientationChange(adjusted = true)
                 .danceShakeModifier()
+//                .danceParallax()
 //                .danceFling()
 //                .danceTaps()
 //                .danceResize()
