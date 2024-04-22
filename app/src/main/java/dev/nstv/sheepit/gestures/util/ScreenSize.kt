@@ -16,7 +16,7 @@ data class ScreenSize(
     val heightPx: Int
 ) {
     val middlePoint: DpOffset = DpOffset(width / 2, height / 2)
-    val middlePointPx: Offset = Offset(widthPx / 2f, heightPx / 2f)
+    val halfSize: Offset = Offset(widthPx / 2f, heightPx / 2f)
 }
 
 @Composable

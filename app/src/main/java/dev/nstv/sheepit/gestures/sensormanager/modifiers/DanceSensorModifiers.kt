@@ -47,7 +47,7 @@ fun Modifier.danceOrientationChange(
     val sensors =
         remember(adjusted) { listOf(if (adjusted) CUSTOM_ORIENTATION_CORRECTED else CUSTOM_ORIENTATION) }
 
-    fun doOrientationDance(roll: Float, pitch: Float) {
+    fun doOrientationDance(pitch: Float, roll: Float) {
         // Rotation
         coroutineScope.launch {
             val degreesX = mapRotation(pitch, HalfPi)
@@ -69,7 +69,7 @@ fun Modifier.danceOrientationChange(
             sensorManager = sensorManager,
         ) { _, values ->
             if (danceEnabled) {
-                doOrientationDance(values[2], values[1])
+                doOrientationDance(values[1], values[2])
             }
             onOrientationChanged(DeviceOrientation(values))
         }.then(DanceMoveElement {

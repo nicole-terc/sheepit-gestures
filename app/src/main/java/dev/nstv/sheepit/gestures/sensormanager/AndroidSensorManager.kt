@@ -11,6 +11,7 @@ import androidx.compose.ui.platform.LocalContext
 import dev.nstv.sheepit.gestures.util.HalfPi
 import dev.nstv.sheepit.gestures.util.Pi
 import dev.nstv.sheepit.gestures.util.TwoPi
+import dev.nstv.sheepit.gestures.util.getOrientationGimbalLockCorrected
 import kotlin.math.sqrt
 
 
@@ -166,14 +167,10 @@ class AndroidSensorManager(
                 if (lastRotationSet) {
                     val currentRotationReading = FloatArray(9)
                     SensorManager.getRotationMatrixFromVector(currentRotationReading, event.values)
-                    val orientationAngles = FloatArray(3) { index ->
-                        when (index) {
-                            0 -> (lastRotationReading[0] * currentRotationReading[1] + lastRotationReading[3] * currentRotationReading[4] + lastRotationReading[6] * currentRotationReading[7]) * TwoPi // azimuth[-z] (0 to 2π)
-                            1 -> -(lastRotationReading[2] * currentRotationReading[1] + lastRotationReading[5] * currentRotationReading[4] + lastRotationReading[8] * currentRotationReading[7]) * HalfPi// pitch[x] (-π/2 to π/2)
-                            2 -> -(lastRotationReading[2] * currentRotationReading[0] + lastRotationReading[5] * currentRotationReading[3] + lastRotationReading[8] * currentRotationReading[6]) * Pi// roll[y] (-π to π)
-                            else -> 0f
-                        }
-                    }
+                    val orientationAngles = getOrientationGimbalLockCorrected(
+                        lastRotationReading = lastRotationReading,
+                        currentRotationReading = currentRotationReading
+                    )
                     val orientation = DeviceOrientation(orientationAngles)
                     if (ShowSensorLog) orientation.prettyPrint()
                     onOrientationChanged(orientation)
@@ -201,8 +198,8 @@ class AndroidSensorManager(
 
     // Function to detect shake gestures using the accelerometer sensor
     fun observeShakeGestures(
-        shakeSensitivity: Float = 12f,
-        shakeStopDelay: Long = 300,
+        shakeSensitivity: Float = 8f,
+        shakeStopDelay: Long = 100,
         onShakeStarted: () -> Unit,
         onShakeStopped: () -> Unit
     ) {

@@ -62,6 +62,8 @@ dependencies {
     implementation(libs.androidx.animation)
 //    implementation(libs.androidx.uiSnapshot)
     implementation(libs.composableSheep)
+    implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.accompanist.permissions)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

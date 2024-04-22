@@ -74,7 +74,6 @@ fun Modifier.danceTaps(): Modifier {
                 rotationZ.animateTo(it, defaultDanceAnimationSpec())
                 delay(DefaultDelay)
             }
-
         }
     }
 
@@ -82,12 +81,11 @@ fun Modifier.danceTaps(): Modifier {
         isSpinning = true
         coroutineScope.launch {
             rotationZ.animateTo(
-                360f,
-                infiniteRepeatable(
+                targetValue = 360f,
+                animationSpec = infiniteRepeatable(
                     keyframes {
                         durationMillis = 300
                         0f atFraction 0f
-                        180f atFraction 0.5f
                         360f atFraction 1f
                     }
                 )
@@ -147,8 +145,8 @@ fun Modifier.danceFling(): Modifier {
             initialVelocity = velocity,
         )
 
-        if (decayOffset.x < screenSize.middlePointPx.x && decayOffset.x > -screenSize.middlePointPx.x &&
-            decayOffset.y < screenSize.middlePointPx.y && decayOffset.y > -screenSize.middlePointPx.y
+        if (decayOffset.x < screenSize.halfSize.x && decayOffset.x > -screenSize.halfSize.x &&
+            decayOffset.y < screenSize.halfSize.y && decayOffset.y > -screenSize.halfSize.y
         ) {
             coroutineScope.launch {
                 translation.animateDecay(velocity, decay)
@@ -156,8 +154,8 @@ fun Modifier.danceFling(): Modifier {
         } else {
             coroutineScope.launch {
                 val adjustedOffset = Offset(
-                    x = if (decayOffset.x < -screenSize.middlePointPx.x) -screenSize.middlePointPx.x else if (decayOffset.x > screenSize.middlePointPx.x) screenSize.middlePointPx.x else decayOffset.x,
-                    y = if (decayOffset.y < -screenSize.middlePointPx.y) -screenSize.middlePointPx.y else if (decayOffset.y > screenSize.middlePointPx.y) screenSize.middlePointPx.y else decayOffset.y
+                    x = if (decayOffset.x < -screenSize.halfSize.x) -screenSize.halfSize.x else if (decayOffset.x > screenSize.halfSize.x) screenSize.halfSize.x else decayOffset.x,
+                    y = if (decayOffset.y < -screenSize.halfSize.y) -screenSize.halfSize.y else if (decayOffset.y > screenSize.halfSize.y) screenSize.halfSize.y else decayOffset.y
                 )
                 translation.animateTo(adjustedOffset)
 
