@@ -102,7 +102,7 @@ fun SelectionScreen(
                 Screen.Sheep -> SheepScreen()
                 Screen.SheepTower -> SheepTowerScreen()
                 Screen.Parallax -> ParallaxScreen()
-                Screen.Step -> StepScreen()
+                Screen.Step -> StepCounterScreen()
             }
         }
     }

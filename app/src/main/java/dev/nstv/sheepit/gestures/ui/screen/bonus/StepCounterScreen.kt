@@ -35,7 +35,7 @@ import dev.nstv.sheepit.gestures.util.sideToSideKeyframes
 import kotlinx.coroutines.launch
 
 @Composable
-fun StepScreen(
+fun StepCounterScreen(
     modifier: Modifier = Modifier,
     sheep: Sheep = Sheep(fluffColor = SheepColor.Orange),
 ) = PermissionsWrapper {

@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
+import dev.nstv.sheepit.gestures.ui.screen.SheepScreen
 import dev.nstv.sheepit.gestures.ui.screen.bonus.SelectionScreen
 import dev.nstv.sheepit.gestures.ui.theme.SheepItGesturesTheme
 
@@ -20,7 +21,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    SelectionScreen()
+                    SheepScreen()
                 }
             }
         }
